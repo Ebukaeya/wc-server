@@ -3,42 +3,39 @@ import userModel from "../users/model.js";
 import { generateToken } from "../../auth/index.js";
 import createError from "http-errors";
 import bcrypt from "bcrypt";
+import passport from "passport";
 
 const loginRouter = express.Router();
+/* http://localhost:3001/login/googlredirect */
 
 loginRouter.post("/login", async (req, res, next) => {
   try {
     const { email, _, password } = req.body;
-    console.log(password);
+
     const user = await userModel.findOne({ email });
     if (user) {
       /* check password */
-      const isPasswordCorrect = await bcrypt.compare(password, user.password);
+      const isPasswordCorrect = await bcrypt.compare(
+        password,
+        user.password
+      ); /* true or false */
 
       if (isPasswordCorrect) {
         /* generate token */
-        console.log("am here");
-        const token = await generateToken(user);
-        console.log(token);
-        user.token = token;
-        await user.save();
+        const token = await generateToken({ email: user.email, id: user._id });
+console.log(token);
+        /* will be redirected to dashboard */
         res.status(200).send({
           status: 200,
-          message: "Login successful",
+          message: "Login successful with token " + token,
           user,
         });
+      } else {
+        next(createError(400, "Password incorrect"));
       }
     } else {
       next(createError(404, "user not found"));
     }
-
-    const token = await generateToken(user);
-
-    user.token = token;
-    const newUser = new userModel(user);
-
-    await newUser.save();
-    res.send(newUser);
   } catch (error) {
     console.log(error);
   }
@@ -58,9 +55,9 @@ loginRouter.post("/signup", async (req, res, next) => {
         const user = {
           ...req.body,
           avatar: "https://avatars2.githubusercontent.com/u/52709818?s=460&v=4",
-          createdAt: new Date().getDate().toLocaleString(),
         };
         const newUser = new userModel(user);
+        /* redirect to login */
         newUser.save().then(res.send(newUser));
       }
     } else {
@@ -70,5 +67,24 @@ loginRouter.post("/signup", async (req, res, next) => {
     next(error);
   }
 });
+
+loginRouter.get(
+  "/auth/google",
+  passport.authenticate("google", { scope: ["profile", "email"] })
+);
+
+loginRouter.get(
+  "/login/googlredirect",
+  passport.authenticate("google", { session: false }),
+  async (req, res, next) => {
+    const token = req.user;
+    try {
+        console.log(process.env.FRONT_END_URL);
+      res.redirect(`${process.env.FRONT_END_URL}/dashboard?token=${token}`);
+    } catch (error) {
+      console.log(error);
+    }
+  }
+);
 
 export default loginRouter;

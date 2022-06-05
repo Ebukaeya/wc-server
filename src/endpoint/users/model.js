@@ -5,11 +5,14 @@ import bcrypt from "bcrypt";
 const userSchema = new Schema({
   name: { type: String, required: true },
   email: { type: String, required: true },
-  password: { type: String, required: true },
+  password: { type: String, },
   status: { type: String },
   avatar: { type: String },
   token: { type: String },
-});
+  googleId: { type: String },
+},
+{timestamps: true}
+);
 
 userSchema.pre("save", async function (next) { 
   if (this.isModified("password")) {
