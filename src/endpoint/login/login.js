@@ -44,7 +44,8 @@ console.log(token);
 loginRouter.post("/signup", async (req, res, next) => {
   try {
     /* check if body exists */
-    if (req.body) {
+    console.log(req.body);
+    if (req.body.email && req.body.password && req.body.name) {
       const { name, email, password } = req.body;
       console.log(email, password);
       const userAlreadyExist = await userModel.findOne({ email });
@@ -58,9 +59,10 @@ loginRouter.post("/signup", async (req, res, next) => {
         };
         const newUser = new userModel(user);
         /* redirect to login */
-        newUser.save().then(res.send(newUser));
+        newUser.save().then( res.status(200).send(newUser));
       }
     } else {
+        console.log("no body");
       next(createError(400, "please provide a valid body"));
     }
   } catch (error) {
