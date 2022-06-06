@@ -10,8 +10,8 @@ const loginRouter = express.Router();
 
 loginRouter.post("/login", async (req, res, next) => {
   try {
-    const { email, _, password } = req.body;
-
+    const { email, password } = req.body;
+console.log(email,password);
     const user = await userModel.findOne({ email });
     if (user) {
       /* check password */
