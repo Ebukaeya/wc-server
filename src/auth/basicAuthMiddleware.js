@@ -25,7 +25,7 @@ const basicAuthMiddleware = async (req, res, next) => {
     }
     else {
       next(createError(400, "Unauthorized, you must provide a token"));
-    }F
+    }
   } catch (error) {
     console.log(error);
   }

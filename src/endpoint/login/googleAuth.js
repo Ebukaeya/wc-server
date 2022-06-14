@@ -18,8 +18,12 @@ const googleStrategy = new GoogleStrategy(
 
       if (user) {
         const token = await generateToken({ email: user.email, id: user._id });
+        const payload ={
+            googleUser: user,
+            token
+        }
 
-        done(null, token);
+        done(null, payload);
       } else {
         const token = await generateToken({ email: email, id });
         const newUser = new userModel({
@@ -28,7 +32,11 @@ const googleStrategy = new GoogleStrategy(
           avatar: picture,
           googleId: id,
         });
-        newUser.save().then(done(null, token));
+        const payload ={
+            googleUser: newUser,
+            token
+        }
+        newUser.save().then(done(null, payload));
       }
     } 
     catch (error) {

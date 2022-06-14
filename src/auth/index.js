@@ -29,6 +29,7 @@ export const verifyToken = (token) =>
 
 export const authenticateUsers = async (email, id) => {
   try {
+      console.log(id);
     const user = await userModel.findById(id);
     if (user) {
       return user;
