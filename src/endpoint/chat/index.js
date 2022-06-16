@@ -55,7 +55,7 @@ conversationRouter.put("/:userid/chats/:chatid", async(req, res, next) => {
            //     }
           //  });
           user.conversations=conversationArray;
-            console.log(user.conversations);
+         
             await user.save();
          res.status(200).send("conversation updated");
         }else{

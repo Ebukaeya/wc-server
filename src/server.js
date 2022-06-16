@@ -11,6 +11,7 @@ import conversationRouter from "./endpoint/chat/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import verifySocket from "./auth/sockeMiddleware.js";
+import { v4 as uuidv4 } from "uuid";
 const server = express();
 
 let port = process.env.PORT || 3000;
@@ -53,9 +54,10 @@ io.use(verifySocket);
 const connectedUser = [];
 
 io.on("connection", async(socket) => {
-    let room = socket.id;
+    let room = socket.user.id //socket.id;
   socket.user.room = room;
   await socket.user.save()
+  socket.join(room);
   socket.emit("room", "hello man");
 
 
@@ -63,6 +65,18 @@ io.on("connection", async(socket) => {
     console.log(data);
     io.emit("chat", data);
   });
+
+socket.on("sendMessage", (message, room, avatar)=>{
+  console.log("listed");
+  /* console.log(room); */
+  socket.join(room);
+socket.to(room).emit("receiveMessage",{
+  message,
+  from:socket.id,
+  avatar
+})
+})
+
 });
 
 mongoose.connect(process.env.Dev_database, () => {
