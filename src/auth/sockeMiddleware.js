@@ -11,9 +11,7 @@ const verifySocket = async (socket, next) => {
 
       if (decoded) {
         const { email, id } = decoded;
-
         const user = await authenticateUsers(email, id);
-
         socket.user = user;
         next();
       }

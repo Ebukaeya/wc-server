@@ -12,9 +12,6 @@ conversationRouter.get("/:userid/chats", async (req, res, next) => {
     if (user) {
       const conversation = user.conversations;
       res.send(conversation);
-      /*     !conversation === -1
-        ? res.send(conversation)
-        : res.status(404).send("no conversation found"); */
     } else {
       res.send("no user found");
     }
@@ -26,10 +23,9 @@ conversationRouter.get("/:userid/chats", async (req, res, next) => {
 conversationRouter.post("/:profileOwnerId/chats/", async (req, res, next) => {
   try {
     const conversation = req.body;
-    const {profileOwnerId} = req.params;
+    const { profileOwnerId } = req.params;
     const user = await userModel.findById(profileOwnerId);
     if (user && conversation) {
-      
       user.conversations.push(conversation);
       await user.save();
       res.send(user);
@@ -41,42 +37,30 @@ conversationRouter.post("/:profileOwnerId/chats/", async (req, res, next) => {
   }
 });
 
-conversationRouter.put("/:userid/chats/:chatid", async(req, res, next) => {
+conversationRouter.put("/:userid/chats/:chatid", async (req, res, next) => {
   try {
-      console.log("entered");
-      const { userid, chatid } = req.params;    
-      const conversationArray = req.body;
-      const user = await userModel.findById(userid);
-        if (user) {
-            /* const currentConversations = user.conversations.filter((conversation,i) => conversation.chat_id === chatid).push(); */
-       //     user.conversations.forEach((conversation,i) => {
-           //     if (conversation.chat_id === chatid) {
-           //         user.conversations[i]=req.body;
-           //     }
-          //  });
-          user.conversations=conversationArray;
-         
-            await user.save();
-         res.status(200).send("conversation updated");
-        }else{
-            res.status(404).send("no user found to add conversation");
-        }
+    console.log("entered");
+    const { userid, chatid } = req.params;
+    const conversationArray = req.body;
+    const user = await userModel.findById(userid);
+    if (user) {
+      /* const currentConversations = user.conversations.filter((conversation,i) => conversation.chat_id === chatid).push(); */
+      //     user.conversations.forEach((conversation,i) => {
+      //     if (conversation.chat_id === chatid) {
+      //         user.conversations[i]=req.body;
+      //     }
+      //  });
+      user.conversations = conversationArray;
+
+      await user.save();
+      res.status(200).send("conversation updated");
+    } else {
+      res.status(404).send("no user found to add conversation");
+    }
   } catch (error) {
-      console.log(error);
+    console.log(error);
   }
 });
-
-
-
-
-
-
-
-
-
-
-
-
 
 /* not usefull routes to be deleted while refactoring */
 conversationRouter.get("/:id", async (req, res, next) => {

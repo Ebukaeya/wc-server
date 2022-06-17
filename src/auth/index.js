@@ -35,6 +35,7 @@ export const authenticateUsers = async (email, id) => {
       return user;
     } else {
       throw new Error("User not found");
+      
     }
   } catch (error) {
       console.log(error);

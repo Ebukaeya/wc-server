@@ -11,7 +11,7 @@ import conversationRouter from "./endpoint/chat/index.js";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import verifySocket from "./auth/sockeMiddleware.js";
-import { v4 as uuidv4 } from "uuid";
+import { onlineUserModel } from "./endpoint/users/model.js";
 const server = express();
 
 let port = process.env.PORT || 3000;
@@ -24,7 +24,7 @@ let allowdOrigins = ["http://localhost:3000", "http://localhost:3001"];
 
 let corsOptionsDelegate = (req, callback) => {
   let corsOptions;
-  /* console.log(req.header("Origin")); */
+
   if (allowdOrigins.indexOf(req.header("Origin")) !== -1) {
     corsOptions = { origin: true };
     console.log("allows");
@@ -35,7 +35,7 @@ let corsOptionsDelegate = (req, callback) => {
 };
 
 server.use(cors(corsOptionsDelegate));
-/* server.use(cors({ origin: "http://localhost:3000" })); */
+
 server.use(passport.initialize());
 
 /* routes */
@@ -51,32 +51,46 @@ const httpServer = createServer(server);
 const io = new Server(httpServer);
 io.use(verifySocket);
 
-const connectedUser = [];
+server.get("/onlineUsers", async (req, res, next) => {
+  try {
+    let onlineUsers = await onlineUserModel.find({});
+    res.send(onlineUsers);
+  } catch (error) {}
+});
 
-io.on("connection", async(socket) => {
-    let room = socket.user.id //socket.id;
+io.on("connection", async (socket) => {
+  let room = socket.user.id; //socket.id;
+  console.log(socket.user);
+  delete socket.user.__v;
   socket.user.room = room;
-  await socket.user.save()
+  let user1 = await socket.user.save();
+
   socket.join(room);
-  socket.emit("room", "hello man");
 
+  const doc = user1.toObject();
+  delete doc.__v;
+  delete doc.password;
+  try {
+    let user = await new onlineUserModel(doc);
+    console.log(user);
+    await user.save();
+    socket.emit("newConnection");
+    socket.broadcast.emit("newConnection");
+  } catch (error) {
+    console.log(error);
+  }
 
-  socket.on("chat", (data) => {
-    console.log(data);
-    io.emit("chat", data);
+  socket.on("disconnect", async () => {
+    await onlineUserModel.findByIdAndDelete(socket.user.id);
+    socket.broadcast.emit("newConnection");
   });
 
-socket.on("sendMessage", (message, room, avatar)=>{
-  console.log("listed");
-  /* console.log(room); */
-  socket.join(room);
-socket.to(room).emit("receiveMessage",{
-  message,
-  from:socket.id,
-  avatar
-})
-})
-
+  socket.on("sendMessage", (message, room, chat_id) => {
+    console.log(message);
+    socket.join(room);
+    message.chat_id = chat_id;
+    socket.to(room).emit("receiveMessage", message);
+  });
 });
 
 mongoose.connect(process.env.Dev_database, () => {

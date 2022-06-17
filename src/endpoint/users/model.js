@@ -36,6 +36,10 @@ const userSchema = new Schema(
   { timestamps: true }
 );
 
+const onlineUserSchema = new Schema(
+ userSchema,
+)
+
 userSchema.pre("save", async function (next) {
   if (this.isModified("password")) {
     const currentUser = this;
@@ -55,4 +59,5 @@ userSchema.methods.toJSON = function () {
 };
 
 const userModel = model("User", userSchema);
+export const onlineUserModel=model("OnlineUser",onlineUserSchema)
 export default userModel;
